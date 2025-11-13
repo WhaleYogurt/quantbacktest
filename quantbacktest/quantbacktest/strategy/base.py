@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional, Protocol, Set, cast, Literal
+from typing import Dict, Iterable, List, Optional, Protocol, Set, TYPE_CHECKING, cast, Literal
 
 from ..core.events import MarketEvent, SignalEvent
 from .context import StrategyContext
+
+if TYPE_CHECKING:
+    from ..portfolio import PortfolioState
+    from .indicators import IndicatorCache
 
 
 class Strategy(Protocol):
@@ -98,22 +102,22 @@ class BaseStrategy(Strategy):
         self._last_signal_ts.clear()
 
     @property
-    def portfolio(self):
+    def portfolio(self) -> "PortfolioState":
         self._ensure_context()
-        return self.context.portfolio  # type: ignore[return-value]
+        assert self.context is not None
+        return self.context.portfolio
 
     @property
-    def indicator_cache(self):
+    def indicator_cache(self) -> "IndicatorCache":
         self._ensure_context()
-        return self.context.indicator_cache  # type: ignore[return-value]
+        assert self.context is not None
+        return self.context.indicator_cache
 
     @property
     def metadata(self) -> Dict[str, str]:
         self._ensure_context()
-        ctx = self.context
-        if ctx is None:
-            return {}
-        return ctx.metadata or {}
+        assert self.context is not None
+        return self.context.metadata or {}
 
     # --- internal helpers -------------------------------------------------
     def _enforce_monotonic(self, event: MarketEvent) -> None:

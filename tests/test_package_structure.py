@@ -7,7 +7,7 @@ from quantbacktest.engine import run_placeholder_backtest
 
 
 def test_version_exposed() -> None:
-    assert quantbacktest.get_version() == "0.1.0"
+    assert quantbacktest.get_version() == "0.2.0"
 
 
 def test_placeholder_backtest_runs() -> None:

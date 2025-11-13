@@ -19,7 +19,7 @@ __all__ = [
     "register_startup_hook",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 _STARTUP_HOOKS: list[Callable[[], None]] = []
 
 

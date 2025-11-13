@@ -43,3 +43,4 @@ docs/_build/
 AGENTS.md
 tests/data/
 !tests/data/.gitkeep
+!tests/data/synthetic_aapl.csv

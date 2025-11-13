@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
-import pandas as pd
-
 from ..engine.modes import EngineResult
 from .analyzer import analyze_engine_result
 

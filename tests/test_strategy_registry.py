@@ -2,13 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quantbacktest.strategy import (
-    MeanReversionStrategy,
-    StaticSignalStrategy,
-    available_strategies,
-    get_strategy,
-    register_strategy,
-)
+from quantbacktest.strategy import StaticSignalStrategy, available_strategies, get_strategy, register_strategy
 
 
 def test_registry_lifecycle() -> None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from quantbacktest.core.events import MarketEvent, SignalEvent
+from quantbacktest.core.events import MarketEvent
 from quantbacktest.portfolio import PortfolioState
 from quantbacktest.strategy import BaseStrategy, IndicatorCache, StrategyContext
 

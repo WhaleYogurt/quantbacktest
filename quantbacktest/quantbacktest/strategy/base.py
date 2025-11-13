@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional, Protocol, Sequence, Set
+from typing import Dict, Iterable, List, Optional, Protocol, Set
 
 from ..core.events import MarketEvent, SignalEvent
 from .context import StrategyContext

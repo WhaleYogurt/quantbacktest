@@ -3,9 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from quantbacktest.engine.modes import EngineMode, EngineResult, EngineSegmentResult
 from quantbacktest.metrics.cli import main as metrics_cli_main
-from quantbacktest.metrics.report import build_metrics_report
 
 
 def test_metrics_cli_generates_summary(tmp_path: Path) -> None:

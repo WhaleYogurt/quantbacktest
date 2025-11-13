@@ -10,7 +10,7 @@ lazily to keep import time low during CLI usage.
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 __all__ = [
     "__version__",

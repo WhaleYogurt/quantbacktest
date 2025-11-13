@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 from ..engine.modes import EngineResult
 from .base import compute_basic_metrics

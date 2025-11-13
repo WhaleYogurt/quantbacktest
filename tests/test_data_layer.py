@@ -15,7 +15,7 @@ from quantbacktest.data import (
     LocalDataCache,
 )
 from quantbacktest.data.errors import DataFetchError, DataProviderError, DataValidationError
-from quantbacktest.data.providers.yahoo import YahooFinanceProvider
+from quantbacktest.data.settings import ProviderConfig
 
 
 class FailingProvider:
@@ -43,6 +43,18 @@ def _request() -> DataRequest:
         start=datetime(2020, 1, 1, tzinfo=timezone.utc),
         end=datetime(2020, 1, 3, tzinfo=timezone.utc),
         interval="1d",
+    )
+
+
+def _write_fixture(data_dir: Path) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = data_dir / "synthetic_aapl.csv"
+    csv_path.write_text(
+        "timestamp,open,high,low,close,volume\n"
+        "2020-01-01T00:00:00+00:00,100.0,101.0,99.0,100.5,1000000\n"
+        "2020-01-02T00:00:00+00:00,101.0,102.0,100.0,101.5,1200000\n"
+        "2020-01-03T00:00:00+00:00,102.0,103.0,101.0,102.5,1300000\n",
+        encoding="utf-8",
     )
 
 
@@ -123,8 +135,9 @@ def test_validator_detects_duplicates() -> None:
         validator.validate(frame, request)
 
 
-def test_local_csv_provider_loads_fixture() -> None:
-    data_dir = Path(__file__).parents[0] / "data"
+def test_local_csv_provider_loads_fixture(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    _write_fixture(data_dir)
     provider = LocalCSVProvider(data_dir=data_dir)
     request = _request()
     frame = provider.fetch(request)
@@ -140,7 +153,13 @@ def test_data_manager_raises_after_all_failures(tmp_path: Path) -> None:
 
 
 def test_data_settings_builder(tmp_path: Path) -> None:
-    settings = DataSettings.defaults(cache_dir=tmp_path / "cache", data_dir=Path("tests/data"))
+    data_dir = tmp_path / "data"
+    _write_fixture(data_dir)
+    settings = DataSettings(
+        cache_dir=tmp_path / "cache",
+        data_dir=data_dir,
+        provider_chain=[ProviderConfig(name="local_csv")],
+    )
     manager = settings.build_manager()
     result = manager.fetch(
         DataRequest(
@@ -149,4 +168,4 @@ def test_data_settings_builder(tmp_path: Path) -> None:
             end=datetime(2020, 1, 4, tzinfo=timezone.utc),
         )
     )
-    assert not result.empty
+    assert len(result) >= 3

@@ -27,8 +27,10 @@ class YahooFinanceProvider(DataProvider):
             raise ValueError("start must be earlier than end")
 
         last_error: Optional[Exception] = None
+
         for attempt in range(1, self.retries + 1):
             try:
+                # IMPORTANT: no group_by="ticker" → avoid MultiIndex columns
                 df = yf.download(
                     request.symbol,
                     start=request.start,
@@ -36,11 +38,24 @@ class YahooFinanceProvider(DataProvider):
                     interval=request.interval,
                     auto_adjust=request.adjusted,
                     progress=False,
-                    group_by="ticker",
                 )
+
                 if df.empty:
                     raise DataProviderError("yfinance returned no data")
-                df = df.reset_index(names="timestamp")
+
+                # Move index into a proper timestamp column
+                df = df.reset_index()
+
+                # yfinance uses either "Date" or "Datetime" depending on interval/version
+                if "Date" in df.columns:
+                    df = df.rename(columns={"Date": "timestamp"})
+                elif "Datetime" in df.columns:
+                    df = df.rename(columns={"Datetime": "timestamp"})
+                else:
+                    # Fallback: assume the first column is the index
+                    df = df.rename(columns={df.columns[0]: "timestamp"})
+
+                # Normalize OHLCV column names to what DataValidator expects
                 rename_map = {
                     "Open": "open",
                     "High": "high",
@@ -50,12 +65,20 @@ class YahooFinanceProvider(DataProvider):
                     "Volume": "volume",
                 }
                 df = df.rename(columns=rename_map)
-                missing = [col for col in ["open", "high", "low", "close", "volume"] if col not in df.columns]
+
+                required = ["open", "high", "low", "close", "volume"]
+                missing = [col for col in required if col not in df.columns]
                 if missing:
                     raise DataProviderError(f"missing column(s): {', '.join(missing)}")
-                return df
+
+                # Return only the columns DataValidator cares about.
+                # DataValidator will handle timestamp normalization & sorting.
+                return df[["timestamp", "open", "high", "low", "close", "volume"]]
+
             except Exception as exc:  # pragma: no cover - network path
                 last_error = exc
                 if attempt < self.retries:
                     time.sleep(self.backoff * attempt)
+
+        # If we get here, all retries failed
         raise DataProviderError(f"Yahoo Finance request failed: {last_error}")

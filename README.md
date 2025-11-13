@@ -25,7 +25,6 @@ quantbacktest/
 ├─ tests/                  # Pytest suite + offline fixtures
 ├─ docs/                   # Architecture notes and tutorials
 ├─ examples/               # Ready-to-run research snippets
-├─ bloat/                  # Parking area for deprecated assets
 └─ test.bat                # Unified verification + profiling harness
 ```
 

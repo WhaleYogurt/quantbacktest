@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from ..engine.modes import EngineResult
 from .analyzer import analyze_engine_result
@@ -12,7 +12,7 @@ from .analyzer import analyze_engine_result
 @dataclass(slots=True)
 class MetricsReport:
     summary: Dict[str, float]
-    segment_metrics: List[Dict[str, float]]
+    segment_metrics: List[Dict[str, Any]]
 
     def to_markdown(self) -> str:
         header = "| Metric | Value |\n|---|---|\n"
@@ -23,7 +23,7 @@ class MetricsReport:
 def build_metrics_report(engine_result: EngineResult, output_dir: Path) -> MetricsReport:
     output_dir.mkdir(parents=True, exist_ok=True)
     summary = analyze_engine_result(engine_result, output_dir)
-    segment_metrics = []
+    segment_metrics: List[Dict[str, Any]] = []
     for segment in engine_result.segments:
         segment_metrics.append(
             {
@@ -40,11 +40,12 @@ def build_metrics_report(engine_result: EngineResult, output_dir: Path) -> Metri
     return MetricsReport(summary=summary, segment_metrics=segment_metrics)
 
 
-def build_markdown(summary: Dict[str, float], segments: List[Dict[str, float]]) -> str:
+def build_markdown(summary: Dict[str, float], segments: List[Dict[str, Any]]) -> str:
     md = ["# Metrics Summary", MetricsReport(summary, segments).to_markdown(), "\n## Segments"]
     for segment in segments:
+        duration = float(segment.get("duration_ms", 0.0))
         md.append(
             f"- `{segment['segment_id']}`: fills={segment['fill_count']} "
-            f"duration={segment['duration_ms']:.2f} ms params={segment['parameters']}"
+            f"duration={duration:.2f} ms params={segment['parameters']}"
         )
     return "\n".join(md)

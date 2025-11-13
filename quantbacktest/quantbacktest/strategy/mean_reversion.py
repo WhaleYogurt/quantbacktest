@@ -42,10 +42,12 @@ class MeanReversionStrategy(BaseStrategy):
             return []
         direction = "SHORT" if z_score > 0 else "LONG"
         strength = min(1.0, abs(z_score) / self.z_threshold) * self.weights.get(event.symbol, 1.0)
-        yield self.create_signal(
-            symbol=event.symbol,
-            strength=strength,
-            direction=direction,
-            event=event,
-            signal_id=f"{self.name}-{event.timestamp}",
-        )
+        return [
+            self.create_signal(
+                symbol=event.symbol,
+                strength=strength,
+                direction=direction,
+                event=event,
+                signal_id=f"{self.name}-{event.timestamp}",
+            )
+        ]

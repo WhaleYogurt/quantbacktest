@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-import yfinance as yf
+import yfinance as yf  # type: ignore[import-untyped]
 
 from ..errors import DataProviderError
 from .base import DataProvider, DataRequest

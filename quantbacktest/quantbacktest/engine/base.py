@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from itertools import count
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence, Literal, cast
 
 from ..core.events import FillEvent, MarketEvent, OrderEvent, SignalEvent
 from ..core.execution import ExecutionConfig, SimulatedExecutionHandler
@@ -116,22 +116,24 @@ class BacktestRunner:
         fills: List[FillEvent] = []
         latest_market: dict[str, MarketEvent] = {}
 
-        for event in plan.events:
-            queue.put(event)
+        for market_event in plan.events:
+            queue.put(market_event)
 
         while len(queue):
-            event = queue.get()
-            if isinstance(event, MarketEvent):
-                portfolio.mark_price(event.symbol, event.price)
-                latest_market[event.symbol] = event
-                for signal in self.strategy.on_market_data(event):
+            qitem = queue.get()
+            if qitem is None:
+                continue
+            if isinstance(qitem, MarketEvent):
+                portfolio.mark_price(qitem.symbol, qitem.price)
+                latest_market[qitem.symbol] = qitem
+                for signal in self.strategy.on_market_data(qitem):
                     order = self._signal_to_order(signal)
                     queue.put(order)
-            elif isinstance(event, OrderEvent):
-                market_snapshot = latest_market.get(event.symbol)
+            elif isinstance(qitem, OrderEvent):
+                market_snapshot = latest_market.get(qitem.symbol)
                 if market_snapshot is None:
                     continue
-                fill_list = self.execution_handler.execute(event, market_snapshot)
+                fill_list = self.execution_handler.execute(qitem, market_snapshot)
                 for fill in fill_list:
                     portfolio.apply_fill(fill)
                     fills.append(fill)
@@ -147,7 +149,8 @@ class BacktestRunner:
         )
 
     def _signal_to_order(self, signal: SignalEvent) -> OrderEvent:
-        direction = "BUY" if signal.direction.upper() == "LONG" else "SELL"
+        direction_str = "BUY" if signal.direction.upper() == "LONG" else "SELL"
+        direction = cast(Literal["BUY", "SELL"], direction_str)
         quantity = max(1, int(abs(signal.strength) * 100))
         order_id = f"ord-{next(self._order_counter)}"
         return OrderEvent(

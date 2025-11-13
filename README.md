@@ -47,3 +47,37 @@ test.bat
 ```
 
 The roadmap in the user instructions drives development through nine gated steps. We are currently implementing **Step 1 — Project Skeleton**; later steps will layer in the full data stack, portfolio engine, metrics, documentation, and example strategies.
+
+## Documentation
+
+- `docs/quickstart.md` – installation and workflow.
+- `docs/strategies.md` – lifecycle, indicator caches, warm-up best practices.
+- `docs/data.md` – provider/caching guidelines.
+- `docs/metrics.md` – analyzer usage and report schema.
+- `docs/examples.md` – command cheatsheet for every example script.
+- `docs/ci.md` – overview of the GitHub Actions pipeline and local parity steps.
+- `CHANGELOG.md` – version history.
+
+## Release Preparation Checklist
+
+Before pushing to GitHub or publishing:
+
+1. Clean generated artifacts:
+   ```bash
+   git clean -fdX  # removes artifacts/, cache/, .pytest_cache/, examples/output/, etc.
+   ```
+   (Alternatively, manually delete `artifacts/`, `cache/`, `.pytest_cache/`, `examples/output/`, `profile.txt`, `report.txt`.)
+2. Regenerate synthetic fixtures if required:
+   ```bash
+   python scripts/generate_synthetic_data.py
+   ```
+3. Run the full verification suite:
+   ```bash
+   ruff check .
+   mypy quantbacktest
+   python -m pytest
+   test.bat
+   ```
+4. Update `CHANGELOG.md` and `pyproject.toml` when bumping versions.
+
+This keeps the repository reproducible and ensures pip installs work cleanly from GitHub.

@@ -6,6 +6,7 @@ from typing import Sequence
 
 from .cache import LocalDataCache
 from .manager import DataManager
+from .providers.base import DataProvider
 from .providers.local_csv import LocalCSVProvider
 from .providers.yahoo import YahooFinanceProvider
 from .validator import DataValidator
@@ -36,7 +37,7 @@ class DataSettings:
 
     def build_manager(self) -> DataManager:
         cache = LocalDataCache(root=self.cache_dir)
-        providers = []
+        providers: list[DataProvider] = []
         for config in self.provider_chain:
             if config.name == "local_csv":
                 if not self.data_dir:

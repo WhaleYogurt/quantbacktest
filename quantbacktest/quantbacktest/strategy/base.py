@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional, Protocol, Set
+from typing import Dict, Iterable, List, Optional, Protocol, Set, cast, Literal
 
 from ..core.events import MarketEvent, SignalEvent
 from .context import StrategyContext
@@ -87,7 +87,7 @@ class BaseStrategy(Strategy):
         return SignalEvent(
             symbol=symbol,
             strength=strength,
-            direction=direction_norm,
+            direction=cast(Literal["LONG", "SHORT"], direction_norm),
             signal_id=signal_id,
             timestamp=event.timestamp,
         )
@@ -110,7 +110,10 @@ class BaseStrategy(Strategy):
     @property
     def metadata(self) -> Dict[str, str]:
         self._ensure_context()
-        return self.context.metadata or {}
+        ctx = self.context
+        if ctx is None:
+            return {}
+        return ctx.metadata or {}
 
     # --- internal helpers -------------------------------------------------
     def _enforce_monotonic(self, event: MarketEvent) -> None:
@@ -134,7 +137,7 @@ class BaseStrategy(Strategy):
         return SignalEvent(
             symbol=signal.symbol,
             strength=clamped,
-            direction=direction_norm,
+            direction=cast(Literal["LONG", "SHORT"], direction_norm),
             signal_id=signal_id,
             timestamp=timestamp,
         )

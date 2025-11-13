@@ -48,6 +48,7 @@ dev = [
     "coverage>=7.3",
     "mypy>=1.7",
     "ruff>=0.4",
+    "pandas-stubs>=2.0",
 ]
 
 [tool.pytest.ini_options]

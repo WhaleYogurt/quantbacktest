@@ -19,9 +19,26 @@ class DataValidator:
     def validate(self, frame: pd.DataFrame, request: DataRequest) -> pd.DataFrame:
         if frame is None or frame.empty:
             raise DataValidationError("received empty data frame")
+        
+            df = frame.copy()
 
-        df = frame.copy()
-        df.columns = [col.lower() for col in df.columns]
+            # Normalize column names: handle both simple Index and MultiIndex
+            if isinstance(df.columns, pd.MultiIndex):
+                normalized_cols = []
+                for col in df.columns:
+                    # col is a tuple in MultiIndex; take the last non-empty level as the name
+                    if isinstance(col, tuple):
+                        # e.g. ('AAPL', 'Close') -> 'close'
+                        # filter out empty/None pieces just in case
+                        candidates = [c for c in col if c not in (None, "", " ")]
+                        base = candidates[-1] if candidates else col[-1]
+                    else:
+                        base = col
+                    normalized_cols.append(str(base).lower())
+                df.columns = normalized_cols
+            else:
+                df.columns = [str(col).lower() for col in df.columns]
+
 
         required_cols = list(self.required_columns)
         missing = [col for col in required_cols if col not in df.columns]

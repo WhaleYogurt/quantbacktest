@@ -39,12 +39,12 @@ class YahooFinanceProvider(DataProvider):
                     auto_adjust=request.adjusted,
                     progress=False,
                 )
-
+                
+                # Move index into a proper timestamp column
+                df = df.reset_index().rename(columns={"Date": "timestamp", "Datetime": "timestamp"})
+                
                 if df.empty:
                     raise DataProviderError("yfinance returned no data")
-
-                # Move index into a proper timestamp column
-                df = df.reset_index()
 
                 # yfinance uses either "Date" or "Datetime" depending on interval/version
                 if "Date" in df.columns:

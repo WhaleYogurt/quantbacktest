@@ -12,7 +12,7 @@ from .base import DataProvider, DataRequest
 
 
 class YahooFinanceProvider(DataProvider):
-    """Wrapper around yfinance that normalizes output for the data validator."""
+    """Robust wrapper around yfinance that normalizes output for the data validator."""
 
     name = "yahoo"
 
@@ -42,51 +42,45 @@ class YahooFinanceProvider(DataProvider):
                 if df.empty:
                     raise DataProviderError("yfinance returned no data")
 
-                # Move index into a column
+                # Put the index into a regular column
                 df = df.reset_index()
 
-                # --- Normalize timestamp column name ---
-                # yfinance usually uses "Date" or "Datetime"
+                # ---- 1) Normalize column names (flatten everything & lowercase) ----
+                flat_cols = []
+                for col in df.columns:
+                    # MultiIndex columns or weird objects
+                    if isinstance(col, tuple):
+                        parts = [str(p).strip() for p in col if p not in (None, "", " ")]
+                        name = "_".join(parts) if parts else str(col)
+                    else:
+                        name = str(col).strip()
+                    flat_cols.append(name.lower())
+                df.columns = flat_cols
+
+                # ---- 2) Find timestamp column ----
                 ts_candidates = [
                     c
                     for c in df.columns
-                    if str(c).lower() in ("date", "datetime", "timestamp")
+                    if "date" in c or "time" in c or "stamp" in c
                 ]
-                if ts_candidates:
-                    ts_col = ts_candidates[0]
-                else:
-                    # Fallback: assume the first column is the datetime index
+                if not ts_candidates:
+                    # If we can't find one by name, assume the first column is the timestamp
                     ts_col = df.columns[0]
+                else:
+                    ts_col = ts_candidates[0]
 
-                df = df.rename(columns={ts_col: "timestamp"})
+                if ts_col != "timestamp":
+                    df = df.rename(columns={ts_col: "timestamp"})
 
-                # --- Flatten and lowercase all non-timestamp columns ---
-                new_cols = []
-                for col in df.columns:
-                    if col == "timestamp":
-                        new_cols.append("timestamp")
-                        continue
-
-                    if isinstance(col, tuple):
-                        parts = [p for p in col if p not in (None, "", " ")]
-                        base = parts[-1] if parts else col[-1]
-                    else:
-                        base = col
-                    new_cols.append(str(base).lower())
-
-                df.columns = new_cols
-
-                # --- Map whatever yfinance gave us to standard OHLCV names ---
+                # ---- 3) Find OHLCV columns by substring match ----
                 logical_to_physical: dict[str, str] = {}
                 missing_logicals: list[str] = []
 
-                for logical in ["open", "high", "low", "close", "volume"]:
+                for logical in ("open", "high", "low", "close", "volume"):
                     matches = [
                         c
                         for c in df.columns
-                        if c == logical
-                        or c.endswith(" " + logical)
-                        or c.endswith("_" + logical)
+                        if c != "timestamp" and logical in c
                     ]
                     if matches:
                         logical_to_physical[logical] = matches[0]
@@ -98,12 +92,12 @@ class YahooFinanceProvider(DataProvider):
                         f"missing columns: {', '.join(missing_logicals)}"
                     )
 
-                # Rename physical -> logical to standardize
+                # ---- 4) Rename physical → logical names ----
                 for logical, physical in logical_to_physical.items():
                     if logical != physical:
                         df = df.rename(columns={physical: logical})
 
-                # Keep only what the validator expects
+                # ---- 5) Return exactly what the validator expects ----
                 return df[["timestamp", "open", "high", "low", "close", "volume"]]
 
             except Exception as exc:  # pragma: no cover - network path

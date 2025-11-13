@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantbacktest"
+version = "0.2.0"
+description = "Production-grade quantitative strategy backtesting and research framework."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Quantbacktest Contributors" }
+]
+keywords = [
+    "quantitative finance",
+    "backtesting",
+    "trading",
+    "risk-management",
+    "portfolio",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "requests>=2.31",
+    "yfinance>=0.2.40",
+    "typing_extensions>=4.8",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "coverage>=7.3",
+    "mypy>=1.7",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["quantbacktest"]
+testpaths = ["tests"]
+addopts = "--maxfail=1 --disable-warnings"
+
+[tool.coverage.run]
+branch = true
+source = ["quantbacktest/quantbacktest"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.setuptools]
+package-dir = {"" = "quantbacktest"}
+
+[tool.setuptools.packages.find]
+where = ["quantbacktest"]
+include = ["quantbacktest*"]
+exclude = ["bloat*"]
